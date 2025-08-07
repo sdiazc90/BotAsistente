@@ -13,44 +13,6 @@ load_dotenv()
 
 st.set_page_config(page_title="Bot Asistente", page_icon="🤖")
 
-# Estilos personalizados
-st.markdown("""
-    <style>
-        
-        section[data-testid="stSidebar"] { background-color: #F3F1EB; opacity: 0.9; }
-        .stMarkdown p, .stText, .stHeader, .stSubheader { color: black !important; }
-        div.stButton > button {
-            background-color: white; color: black; border: 1px solid gray;
-        }
-        div.stButton > button:hover { background-color: #f0f0f0; color: black; }
-        
-        section[data-testid="stChatInput"] { background-color: white; }
-        textarea::placeholder, input::placeholder { color: gray !important; opacity: 0.7; }
-        header[data-testid="stHeader"], footer { background-color: white; }
-            
-    @media screen and (max-width: 768px) {
-        .stApp {
-            background-color: white !important;
-            color: black !important;
-        }
-        
-        }
-        div.stButton > button {
-            background-color: white !important;
-            color: black !important;
-        }
-        section[data-testid="stChatInput"] {
-            background-color: white !important;
-        }
-        textarea, input, .stMarkdown p, .stText, .stHeader, .stSubheader {
-            color: black !important;
-        }
-    
-
-
-    </style>
-""", unsafe_allow_html=True)
-
 # Título
 st.markdown("<h1 style='text-align: center;'>🤖 Asistente ni tan inteligente</h1>", unsafe_allow_html=True)
 
