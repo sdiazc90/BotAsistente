@@ -16,17 +16,14 @@ st.set_page_config(page_title="Bot Asistente", page_icon="🤖")
 # Estilos personalizados
 st.markdown("""
     <style>
-        .stApp { background-color: white; color: black; }
-        section[data-testid="stSidebar"] { background-color: #F3F1EB; opacity: 0.7; }
+        
+        section[data-testid="stSidebar"] { background-color: #F3F1EB; opacity: 0.9; }
         .stMarkdown p, .stText, .stHeader, .stSubheader { color: black !important; }
         div.stButton > button {
             background-color: white; color: black; border: 1px solid gray;
         }
         div.stButton > button:hover { background-color: #f0f0f0; color: black; }
-        .stChatMessage.user, .stChatMessage.bot {
-            background-color: white; color: black;
-            border-radius: 10px; padding: 10px;
-        }
+        
         section[data-testid="stChatInput"] { background-color: white; }
         textarea::placeholder, input::placeholder { color: gray !important; opacity: 0.7; }
         header[data-testid="stHeader"], footer { background-color: white; }
@@ -36,9 +33,7 @@ st.markdown("""
             background-color: white !important;
             color: black !important;
         }
-        .stChatMessage.user, .stChatMessage.bot {
-            background-color: white !important;
-            color: black !important;
+        
         }
         div.stButton > button {
             background-color: white !important;
