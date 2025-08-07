@@ -41,7 +41,7 @@ SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT")
 
 # Mensajes en sesión
 if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+    st.session_state.messages = [{"role": "user", "content": SYSTEM_PROMPT}]
 
 # API Key de Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -123,7 +123,7 @@ with st.sidebar:
     st.subheader("Info")
     st.info("Modelo: Gemini 2.0 Flash")
     if st.button("🧹 Limpiar historial de conversación"):
-        st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+        st.session_state.messages = [{"role": "user", "content": SYSTEM_PROMPT}]
         st.success("Historial limpiado ✅")
         st.rerun()
 
