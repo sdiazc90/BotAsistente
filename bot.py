@@ -36,6 +36,13 @@ st.markdown("""
 # Título
 st.markdown("<h1 style='text-align: center;'>🤖 Asistente ni tan inteligente</h1>", unsafe_allow_html=True)
 
+# Prompt del sistema (opcional)
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT")
+
+# Mensajes en sesión
+if "messages" not in st.session_state:
+    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
+
 # API Key de Gemini
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 if not GEMINI_API_KEY:
@@ -59,12 +66,7 @@ except Exception as e:
     st.error(f"❌ Error al conectar con Google Sheets: {e}")
     st.stop()
 
-# Prompt del sistema (opcional)
-SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Sos un asistente útil.")
 
-# Mensajes en sesión
-if "messages" not in st.session_state:
-    st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
 # Función para extraer JSON del texto
 def extraer_json(texto):
