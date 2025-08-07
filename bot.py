@@ -103,19 +103,33 @@ client = OpenAI(
 
 # Configuración Google Sheets
 GOOGLE_SHEET_NAME = "NombreDeTuGoogleSheet"  # Cambia esto al nombre de tu Google Sheet
-GOOGLE_CREDENTIALS_FILE = "credentials.json"  # Archivo JSON con credenciales de servicio
+import os
+import json
+import gspread
+from oauth2client.service_account import ServiceAccountCredentials
+import streamlit as st
 
-# Autenticación y conexión con Google Sheets
-scope = [
-    "https://spreadsheets.google.com/feeds",
-    "https://www.googleapis.com/auth/drive"
-]
+# Leer credenciales desde variable de entorno
+GOOGLE_CREDENTIALS_JSON = os.getenv("GOOGLE_CREDENTIALS_JSON")
+
+if not GOOGLE_CREDENTIALS_JSON:
+    st.error("Credenciales de Google no encontradas en el entorno.")
+    st.stop()
 
 try:
-    creds = ServiceAccountCredentials.from_json_keyfile_name(GOOGLE_CREDENTIALS_FILE, scope)
+    credentials_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
+
+    scope = [
+        "https://spreadsheets.google.com/feeds",
+        "https://www.googleapis.com/auth/drive"
+    ]
+
+    creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
     gc = gspread.authorize(creds)
-    sh = gc.open("MensajesBot")
+
+    sh = gc.open("MensajesBot")  # Asegurate de que tu cuenta tenga acceso
     worksheet = sh.sheet1
+
 except Exception as e:
     st.error(f"Error al conectar con Google Sheets: {e}")
     st.stop()
