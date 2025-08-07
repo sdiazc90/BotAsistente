@@ -86,14 +86,19 @@ def guardar_en_google_sheets(nombre, email, comentario, mensaje_original):
 def get_ai_response(user_input):
     st.session_state.messages.append({"role": "user", "content": user_input})
 
-    # Preparar payload para Gemini
-    payload = {
-        "contents": [
-            {
-                "parts": [{"text": user_input}]
-            }
-        ]
-    }
+    # 🔁 Convertir todo el historial al formato de Gemini
+    contents = []
+    for msg in st.session_state.messages:
+        role = (
+            "user" if msg["role"] == "user"
+            else "model" if msg["role"] == "assistant"
+            else None
+        )
+        if role:
+            contents.append({
+                "role": role,
+                "parts": [{"text": msg["content"]}]
+            })
 
     try:
         response = requests.post(
@@ -102,7 +107,7 @@ def get_ai_response(user_input):
                 "Content-Type": "application/json",
                 "X-goog-api-key": GEMINI_API_KEY
             },
-            json=payload
+            json={"contents": contents}  # ← usa historial completo
         )
 
         data = response.json()
