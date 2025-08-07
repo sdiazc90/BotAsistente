@@ -1,0 +1,15 @@
+# Ignorar archivo de credenciales de Google
+credentials.json
+
+# Ignorar archivo de variables de entorno
+.env
+
+# Ignorar archivos pycache y otros temporales
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar carpetas de entorno virtual (ajusta según tu carpeta)
+venv/
+.env/
