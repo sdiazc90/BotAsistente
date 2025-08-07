@@ -1,10 +1,10 @@
 import streamlit as st
-from openai import OpenAI
 import os
-from dotenv import load_dotenv
 import json
 import re
+import requests
 from datetime import datetime
+from dotenv import load_dotenv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
@@ -13,129 +13,56 @@ load_dotenv()
 
 st.set_page_config(page_title="Bot Asistente", page_icon="🤖")
 
+# Estilos personalizados
 st.markdown("""
     <style>
-        /* 🎯 Fondo del contenedor principal (toda la app) */
-        .stApp {
-            background-color: white;  /* ← Color de fondo principal */
-            color: black;  /* ← Color del texto por defecto */
-        }
-
-        /* 🎯 Sidebar (barra lateral izquierda) */
-        section[data-testid="stSidebar"] {
-            background-color: #F3F1EB;  /* ← Fondo del sidebar */
-            opacity: 0.7;
-        }
-
-        /* 🎯 Texto general en markdown, encabezados y subencabezados */
-        .stMarkdown p, .stText, .stHeader, .stSubheader {
-            color: black !important;  /* ← Color del texto principal */
-        }
-
-        /* 🎯 Botones como "Limpiar historial" */
+        .stApp { background-color: white; color: black; }
+        section[data-testid="stSidebar"] { background-color: #F3F1EB; opacity: 0.7; }
+        .stMarkdown p, .stText, .stHeader, .stSubheader { color: black !important; }
         div.stButton > button {
-            background-color: white;  /* ← Fondo del botón */
-            color: black;  /* ← Texto del botón */
-            border: 1px solid gray;  /* ← Borde del botón */
+            background-color: white; color: black; border: 1px solid gray;
         }
-
-        div.stButton > button:hover {
-            background-color: #f0f0f0;  /* ← Hover sobre el botón */
-            color: black;
+        div.stButton > button:hover { background-color: #f0f0f0; color: black; }
+        .stChatMessage.user, .stChatMessage.bot {
+            background-color: white; color: black;
+            border-radius: 10px; padding: 10px;
         }
-
-        /* 🎯 Mensajes del usuario */
-        .stChatMessage.user {
-            background-color: white;  /* ← Fondo de los mensajes del usuario */
-            color: black;
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        /* 🎯 Mensajes del bot */
-        .stChatMessage.bot {
-            background-color: white;  /* ← Fondo de los mensajes del bot */
-            color: black;
-            border-radius: 10px;
-            padding: 10px;
-        }
-
-        /* 🎯 Input de texto del chat (contenedor inferior) */
-        section[data-testid="stChatInput"] {
-            background-color: white;  /* ← Fondo del contenedor del input */
-        }
-
-        
-
-        /* 🎯 Placeholder del input (texto guía) */
-        textarea::placeholder, input::placeholder {
-            color: gray !important;
-            opacity: 0.7;
-        }
-
-        /* 🎯 Header horizontal superior (logo y título) */
-        header[data-testid="stHeader"] {
-            background-color: white;  /* ← Fondo del header */
-        }
-
-        /* 🎯 Pie de página (footer) */
-        footer {
-            background-color: white;  /* ← Fondo del footer */
-        }
+        section[data-testid="stChatInput"] { background-color: white; }
+        textarea::placeholder, input::placeholder { color: gray !important; opacity: 0.7; }
+        header[data-testid="stHeader"], footer { background-color: white; }
     </style>
 """, unsafe_allow_html=True)
 
-
-# Título personalizado
+# Título
 st.markdown("<h1 style='text-align: center;'>🤖 Asistente ni tan inteligente</h1>", unsafe_allow_html=True)
 
-# Obtener API Key OpenRouter
-OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
-if not OPENROUTER_API_KEY:
-    st.error("❌ API key no encontrada. Configura tu archivo .env con OPENROUTER_API_KEY")
+# API Key de Gemini
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+if not GEMINI_API_KEY:
+    st.error("❌ Falta la clave de API de Gemini. Configura GEMINI_API_KEY en tu archivo .env.")
     st.stop()
 
-# Inicializar cliente OpenRouter
-client = OpenAI(
-    base_url="https://openrouter.ai/api/v1",
-    api_key=OPENROUTER_API_KEY,
-)
-
 # Configuración Google Sheets
-GOOGLE_SHEET_NAME = "NombreDeTuGoogleSheet"  # Cambia esto al nombre de tu Google Sheet
-import os
-import json
-import gspread
-from oauth2client.service_account import ServiceAccountCredentials
-import streamlit as st
-
-# Leer credenciales desde variable de entorno
 GOOGLE_CREDENTIALS_JSON = os.getenv("GOOGLE_CREDENTIALS_JSON")
-
 if not GOOGLE_CREDENTIALS_JSON:
-    st.error("Credenciales de Google no encontradas en el entorno.")
+    st.error("❌ Credenciales de Google no encontradas en el entorno.")
     st.stop()
 
 try:
     credentials_dict = json.loads(GOOGLE_CREDENTIALS_JSON)
-
-    scope = [
-        "https://spreadsheets.google.com/feeds",
-        "https://www.googleapis.com/auth/drive"
-    ]
-
+    scope = ["https://spreadsheets.google.com/feeds", "https://www.googleapis.com/auth/drive"]
     creds = ServiceAccountCredentials.from_json_keyfile_dict(credentials_dict, scope)
     gc = gspread.authorize(creds)
-
-    sh = gc.open("MensajesBot")  # Asegurate de que tu cuenta tenga acceso
+    sh = gc.open("MensajesBot")
     worksheet = sh.sheet1
-
 except Exception as e:
-    st.error(f"Error al conectar con Google Sheets: {e}")
+    st.error(f"❌ Error al conectar con Google Sheets: {e}")
     st.stop()
 
-SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT")
+# Prompt del sistema (opcional)
+SYSTEM_PROMPT = os.getenv("SYSTEM_PROMPT", "Sos un asistente útil.")
 
+# Mensajes en sesión
 if "messages" not in st.session_state:
     st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
 
@@ -147,41 +74,53 @@ def extraer_json(texto):
     except Exception:
         return None
 
-# Función para guardar datos en Google Sheets con timestamp
+# Guardar en Google Sheets
 def guardar_en_google_sheets(nombre, email, comentario, mensaje_original):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     fila = [timestamp, nombre, email, comentario, mensaje_original]
     worksheet.append_row(fila)
 
-# Función para obtener respuesta IA
+# Llamar a Gemini
 def get_ai_response(user_input):
     st.session_state.messages.append({"role": "user", "content": user_input})
-    try:
-        completion = client.chat.completions.create(
-            model="z-ai/glm-4.5-air:free",
-            messages=st.session_state.messages,
-            temperature=0.6,
-            extra_headers={
-                "HTTP-Referer": "http://localhost:8501",
-                "X-Title": "Asistente IA"
+
+    # Preparar payload para Gemini
+    payload = {
+        "contents": [
+            {
+                "parts": [{"text": user_input}]
             }
+        ]
+    }
+
+    try:
+        response = requests.post(
+            url="https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent",
+            headers={
+                "Content-Type": "application/json",
+                "X-goog-api-key": GEMINI_API_KEY
+            },
+            json=payload
         )
-        ai_response = completion.choices[0].message.content
+
+        data = response.json()
+        ai_response = data["candidates"][0]["content"]["parts"][0]["text"]
         st.session_state.messages.append({"role": "assistant", "content": ai_response})
         return ai_response
+
     except Exception as e:
-        return f"⚠️ Error: {str(e)}"
+        return f"⚠️ Error al generar respuesta: {str(e)}"
 
 # Sidebar
 with st.sidebar:
     st.subheader("Info")
-    st.info("Modelo: GLM-4.5-AIR")
+    st.info("Modelo: Gemini 2.0 Flash")
     if st.button("🧹 Limpiar historial de conversación"):
         st.session_state.messages = [{"role": "system", "content": SYSTEM_PROMPT}]
         st.success("Historial limpiado ✅")
         st.rerun()
 
-# Mostrar historial de mensajes con estilo
+# Mostrar historial de mensajes
 for msg in st.session_state.messages[1:]:
     role_class = "user" if msg["role"] == "user" else "assistant"
     avatar = "🧑" if msg["role"] == "user" else "🤖"
@@ -196,7 +135,7 @@ if prompt := st.chat_input("✍️ Escribí tu mensaje..."):
         with st.spinner("Pensando..."):
             respuesta = get_ai_response(prompt)
 
-            # Intentar extraer JSON y guardar en Google Sheets si es válido
+            # Si contiene JSON válido, guardar
             datos = extraer_json(respuesta)
             if datos and all(k in datos for k in ["nombre", "email", "comentario"]):
                 guardar_en_google_sheets(datos["nombre"], datos["email"], datos["comentario"], prompt)
