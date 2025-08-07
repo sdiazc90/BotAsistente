@@ -30,6 +30,29 @@ st.markdown("""
         section[data-testid="stChatInput"] { background-color: white; }
         textarea::placeholder, input::placeholder { color: gray !important; opacity: 0.7; }
         header[data-testid="stHeader"], footer { background-color: white; }
+            
+    @media screen and (max-width: 768px) {
+        .stApp {
+            background-color: white !important;
+            color: black !important;
+        }
+        .stChatMessage.user, .stChatMessage.bot {
+            background-color: white !important;
+            color: black !important;
+        }
+        div.stButton > button {
+            background-color: white !important;
+            color: black !important;
+        }
+        section[data-testid="stChatInput"] {
+            background-color: white !important;
+        }
+        textarea, input, .stMarkdown p, .stText, .stHeader, .stSubheader {
+            color: black !important;
+        }
+    
+
+
     </style>
 """, unsafe_allow_html=True)
 
